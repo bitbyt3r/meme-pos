@@ -46,6 +46,50 @@ pub fn svg_to_mono(svg: &str, dither: Dither) -> Result<Mono> {
     Ok(dither_to_mono(&luma, w, h, dither))
 }
 
+/// Render `text` as huge letters running LENGTHWISE down the receipt (rotated 90°,
+/// letters as tall as the paper is wide). Used for the "NO REFUNDS" stunt print.
+pub fn banner_lengthwise(text: &str) -> Result<Mono> {
+    const W: usize = 576; // receipt width = the rotated text's height
+    // Render the text big and horizontal on a generously wide canvas.
+    let esc = text.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;");
+    let svg = format!(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='6000' height='{W}'>\
+         <rect width='6000' height='{W}' fill='#fff'/>\
+         <text x='20' y='548' font-size='720' \
+         font-family='Arial Black, Arial, Liberation Sans, DejaVu Sans, FreeSans, sans-serif' \
+         font-weight='900' fill='#000'>{esc}</text></svg>"
+    );
+    let flat = svg_to_mono(&svg, Dither::Threshold)?;
+
+    // Horizontal extent of the inked text (so we don't print blank paper).
+    let (mut minx, mut maxx) = (flat.width, 0usize);
+    for x in 0..flat.width {
+        if (0..flat.height).any(|y| flat.black(x, y)) {
+            minx = minx.min(x);
+            maxx = maxx.max(x);
+        }
+    }
+    if maxx < minx {
+        anyhow::bail!("no glyphs rendered for banner (no font available?)");
+    }
+    let pad = 16usize;
+    let minx = minx.saturating_sub(pad);
+    let maxx = (maxx + pad).min(flat.width - 1);
+    let textw = maxx - minx + 1;
+
+    // Rotate 90° clockwise: new image is W wide (=old height) × textw tall (=text length).
+    let mut luma = vec![255u8; W * textw];
+    for ny in 0..textw {
+        for nx in 0..W {
+            // CW: dest(nx,ny) = src(minx + ny, (W-1) - nx)
+            if flat.black(minx + ny, (W - 1) - nx) {
+                luma[ny * W + nx] = 0;
+            }
+        }
+    }
+    Ok(dither_to_mono(&luma, W, textw, Dither::Threshold))
+}
+
 /// Load a meme image, scale to `target_w` dots, centre on a 576-dot white canvas,
 /// and dither to [`Mono`] — the only rastered photo on the receipt.
 pub fn meme_to_mono(path: &std::path::Path, target_w: u32) -> Result<Mono> {

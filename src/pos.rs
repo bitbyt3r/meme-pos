@@ -80,6 +80,15 @@ pub fn run_pos(scanner_port: &str, printer_port: &str, printer_baud: u32, printe
                 println!("✗ voided {} item(s)\n", cart.len());
                 cart.clear();
             }
+            // Rescanning a printed receipt's own barcode ("6SEVEN<order>") prints
+            // a giant lengthwise NO REFUNDS. Not an item — logs nothing.
+            c if c.starts_with("6SEVEN") => {
+                let job = receipt::build_no_refunds_banner();
+                match print_job(printer_port, printer_baud, printer_flow, &job) {
+                    Ok(()) => println!("🚫 NO REFUNDS (lengthwise)\n"),
+                    Err(e) => eprintln!("print failed: {e:#}"),
+                }
+            }
             _ => {
                 let known = names.contains_key(&code);
                 let name = names
