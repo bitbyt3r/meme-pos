@@ -1,0 +1,20 @@
+[package]
+name = "receipt-printer"
+version = "0.1.0"
+edition = "2021"
+description = "6-seven MAGStock scanner POS + meme receipt printer (NCR 7198)"
+
+[[bin]]
+name = "receipt-printer"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+serialport = "4"                 # scanner + printer (both serial / COM / tty)
+resvg = "0.44"                   # renders the "6-SEVEN" logo
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+rand = "0.8"                     # random snacks / order numbers / meme pick
+chrono = "0.4"                   # POS log timestamps
+
+[profile.release]
+opt-level = 3

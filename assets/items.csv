@@ -1,0 +1,12 @@
+# 6-SEVEN item map:  barcode,name
+# One product per line. Lines starting with # are ignored.
+#
+# To add an item: scan it while --pos is running, copy the [barcode] it prints
+# to the console, and add a line here as  barcode,NAME  then restart --pos.
+# Any unmapped barcode still gets logged (by barcode) and shown with a random
+# joke-snack name on the receipt.
+#
+# Examples (replace with your real snack barcodes):
+028400090728,FLAMIN' HOT CHEETOS
+012000001291,MONSTER ENERGY
+049000050103,BIG GULP
