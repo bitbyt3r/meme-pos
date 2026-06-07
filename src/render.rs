@@ -9,7 +9,20 @@ use crate::raster::{dither_to_mono, Dither, Mono};
 /// Render an SVG document (authored at the printer's pixel width) to [`Mono`].
 pub fn svg_to_mono(svg: &str, dither: Dither) -> Result<Mono> {
     let mut opt = usvg::Options::default();
-    opt.fontdb_mut().load_system_fonts();
+    // The logo SVG asks for Arial Black/Arial, which don't exist on Linux/RPi.
+    // Load system + bundled fonts, then fall back to whatever font IS installed
+    // so the logo never prints blank.
+    let fallback = {
+        let db = opt.fontdb_mut();
+        db.load_system_fonts();
+        db.load_fonts_dir("assets/fonts"); // optional bundled fonts (portable across OS)
+        db.faces()
+            .next()
+            .and_then(|f| f.families.first().map(|(name, _)| name.clone()))
+    };
+    if let Some(family) = fallback {
+        opt.font_family = family;
+    }
 
     let tree = usvg::Tree::from_str(svg, &opt).context("parsing logo SVG")?;
     let size = tree.size();

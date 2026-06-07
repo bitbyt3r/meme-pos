@@ -126,7 +126,8 @@ fn logo_svg() -> String {
         "<svg xmlns='http://www.w3.org/2000/svg' width='{WIDTH}' height='104'>\
          <rect width='{WIDTH}' height='104' fill='#fff'/>\
          <text x='{}' y='80' font-size='84' \
-         font-family='Arial Black, Arial, sans-serif' font-weight='900' \
+         font-family='Arial Black, Arial, Liberation Sans, DejaVu Sans, FreeSans, sans-serif' \
+         font-weight='900' \
          text-anchor='middle' fill='#000'>6\u{2022}SEVEN</text></svg>",
         WIDTH / 2
     )
